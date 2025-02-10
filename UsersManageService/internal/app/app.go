@@ -9,7 +9,6 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
-	"time"
 	"usersManageService/internal/config"
 	"usersManageService/internal/controllers/users"
 	"usersManageService/internal/domain/interfaces"
@@ -69,7 +68,7 @@ func (a *App) StartServer() error {
 func (a *App) Stop() error {
 	a.log.Info("Stoping server...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), a.cfg.ExpirationTime)
 	defer cancel()
 
 	if err := a.srv.Shutdown(ctx); err != nil {

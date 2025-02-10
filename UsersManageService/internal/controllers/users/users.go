@@ -51,7 +51,7 @@ func (u *UserManageController) Get(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := u.client.Get(config.UsersAccessService_url)
 	if err != nil {
-		u.log.Error("/users (GET), error", sl.Err(err))
+		u.log.Error("/users (GET)", sl.Err(err))
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -83,13 +83,14 @@ func (u *UserManageController) GetById(w http.ResponseWriter, r *http.Request) {
 	u.log.Info("/users/{id}/ (GET) running...")
 	id := mux.Vars(r)["id"]
 	if id == "" {
+		u.log.Error("Id is required")
 		http.Error(w, "Id is required", http.StatusBadRequest)
 		return
 	}
 
-	resp, err := u.client.Get("URL" + id + "/")
+	resp, err := u.client.Get(config.UsersAccessService_url + "/" + id + "/")
 	if err != nil {
-		u.log.Error("/users/{id}/ (GET), error", sl.Err(err))
+		u.log.Error("/users/{id}/ (GET)", sl.Err(err))
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -126,9 +127,9 @@ func (u *UserManageController) GetByNick(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	resp, err := u.client.Get("URL")
+	resp, err := u.client.Get(config.UsersAccessService_url)
 	if err != nil {
-		u.log.Error("/users (GET), error", sl.Err(err))
+		u.log.Error("/users/{nick} (GET)", sl.Err(err))
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -167,9 +168,9 @@ func (u *UserManageController) GetByNick(w http.ResponseWriter, r *http.Request)
 func (u *UserManageController) Insert(w http.ResponseWriter, r *http.Request) {
 	u.log.Info("/users (POST) running...")
 
-	resp, err := u.client.Post("URL", "application/json", r.Body)
+	resp, err := u.client.Post(config.UsersAccessService_url, "application/json", r.Body)
 	if err != nil {
-		u.log.Error("/users (POST), error", sl.Err(err))
+		u.log.Error("/users (POST)", sl.Err(err))
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -192,7 +193,7 @@ func (u *UserManageController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := http.NewRequest(http.MethodPut, "URL/"+id, r.Body)
+	req, err := http.NewRequest(http.MethodPut, config.UsersAccessService_url+"/"+id, r.Body)
 	if err != nil {
 		u.log.Error("cannot create request", sl.Err(err))
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -224,7 +225,7 @@ func (u *UserManageController) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := http.NewRequest(http.MethodDelete, "URL/"+id, nil)
+	req, err := http.NewRequest(http.MethodDelete, config.UsersAccessService_url+"/"+id, nil)
 	if err != nil {
 		u.log.Error("cannot create request", sl.Err(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
