@@ -129,7 +129,7 @@ func (u *UserManageController) GetByNick(w http.ResponseWriter, r *http.Request)
 
 	resp, err := u.client.Get(config.UsersAccessService_url)
 	if err != nil {
-		u.log.Error("/users/{nick} (GET)", sl.Err(err))
+		u.log.Error("/users (GET), error", sl.Err(err))
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
