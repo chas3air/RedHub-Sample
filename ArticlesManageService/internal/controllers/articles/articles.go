@@ -181,6 +181,80 @@ func (a *ArticlesManageService) Delete(w http.ResponseWriter, r *http.Request) {
 	a.log.Info("/articles/{id} (DELETE) done")
 }
 
+func (a *ArticlesManageService) InteractionWithCommentsOfPost(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		a.handleGetComments(w, r)
+	case http.MethodPost:
+		a.handleAddComments(w, r)
+	default:
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (a *ArticlesManageService) handleGetComments(w http.ResponseWriter, r *http.Request) {
+	a.log.Info("/articles/{postId}/comments (GET) running...")
+	postId := mux.Vars(r)["postId"]
+	if postId == "" {
+		a.log.Error("postId is required")
+		http.Error(w, "postId is required", http.StatusBadRequest)
+		return
+	}
+
+	resp, err := a.client.Get(config.ArticlesAccessService_url + "/" + postId + "/comments")
+	if err != nil {
+		a.log.Error("/articles/{postId}/comments (DELETE)", sl.Err(err))
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return
+	}
+	defer resp.Body.Close()
+
+	if handleResponseErrors(a, resp, w) {
+		return
+	}
+
+	bs, err := io.ReadAll(resp.Body)
+	if err != nil {
+		a.log.Error("cannot read response body", sl.Err(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(resp.StatusCode)
+	if err := json.NewEncoder(w).Encode(bs); err != nil {
+		a.log.Error("error encoding response", sl.Err(err))
+		http.Error(w, "Failed to encode response:"+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	a.log.Info("/articles/{postId}/comments done")
+}
+
+func (a *ArticlesManageService) handleAddComments(w http.ResponseWriter, r *http.Request) {
+	a.log.Info("/articles/{postId}/comments (POST) running...")
+	postId := mux.Vars(r)["postId"]
+	if postId == "" {
+		a.log.Error("postId is required")
+		http.Error(w, "postId is required", http.StatusBadRequest)
+		return
+	}
+
+	resp, err := a.client.Post(config.ArticlesAccessService_url+"/"+postId+"/comments", "application/json", r.Body)
+	if err != nil {
+		a.log.Error("/articles (POST)", sl.Err(err))
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return
+	}
+
+	if handleResponseErrors(a, resp, w) {
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(resp.StatusCode)
+	a.log.Info("/articles/{postId}/comments (POST) done")
+}
+
 func handleResponseErrors(a *ArticlesManageService, resp *http.Response, w http.ResponseWriter) bool {
 	if resp.StatusCode == http.StatusServiceUnavailable {
 		a.log.Error("service unavailable", slog.Int("code", resp.StatusCode))

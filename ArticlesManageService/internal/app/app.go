@@ -44,6 +44,7 @@ func (a *App) StartServer() error {
 	r.HandleFunc("/articles", articlescontroller.Insert).Methods(http.MethodPost)
 	r.HandleFunc("/articles/{id}", articlescontroller.Update).Methods(http.MethodPut)
 	r.HandleFunc("/articles/{id}", articlescontroller.Delete).Methods(http.MethodDelete)
+	r.HandleFunc("/articles/{postId}/coments", articlescontroller.InteractionWithCommentsOfPost).Methods(http.MethodGet, http.MethodPost)
 
 	a.srv = &http.Server{
 		Addr:    fmt.Sprintf(":%d", a.cfg.Port),
