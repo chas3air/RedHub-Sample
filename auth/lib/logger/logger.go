@@ -1,8 +1,8 @@
 package logger
 
 import (
-	constants "articlesManageService/internal/config"
-	"articlesManageService/lib/logger/handler/slogpretty"
+	constants "auth/internal/config"
+	"auth/lib/logger/handler/slogpretty"
 	"log/slog"
 	"os"
 )

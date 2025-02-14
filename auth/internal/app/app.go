@@ -2,6 +2,7 @@ package app
 
 import (
 	"auth/internal/config"
+	"auth/internal/controllers/auth"
 	"auth/internal/domein/interfaces"
 	"auth/lib/logger/sl"
 	"context"
@@ -10,10 +11,11 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"syscall"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
 type App struct {
@@ -31,26 +33,22 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 }
 
 func (a *App) StartServer() error {
-	var authcontroller interfaces.Auth
+	var authcontroller interfaces.Auth = auth.New(a.log, &http.Client{Timeout: a.cfg.ExpirationTime})
 
-	r := mux.NewRouter()
-
-	r.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-	r.HandleFunc("/login", authcontroller.Login).Methods(http.MethodGet)
-	r.HandleFunc("/register", authcontroller.Register).Methods(http.MethodPost)
-	r.HandleFunc("/permissions", authcontroller.Permissions).Methods(http.MethodGet)
+	router := gin.Default()
+	router.GET("/auth/login", authcontroller.Login)
+	router.POST("/auth/register", authcontroller.Register)
+	router.GET("/auth/permissions", authcontroller.Permissions)
 
 	a.srv = &http.Server{
 		Addr:    fmt.Sprintf(":%d", a.cfg.Port),
-		Handler: r,
+		Handler: router,
 	}
 
 	a.wg.Add(1)
 	go func() {
 		defer a.wg.Done()
-		if err := a.srv.ListenAndServe(); err != nil {
+		if err := router.Run(":" + strconv.Itoa(a.cfg.Port)); err != nil {
 			a.log.Error("error of starting server", sl.Err(err))
 		}
 	}()

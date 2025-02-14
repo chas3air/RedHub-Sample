@@ -1,9 +1,9 @@
 package interfaces
 
-import "net/http"
+import "github.com/gin-gonic/gin"
 
 type Auth interface {
-	Login(w http.ResponseWriter, r *http.Request)
-	Register(w http.ResponseWriter, r *http.Request)
-	Permissions(w http.ResponseWriter, r *http.Request)
+	Login(c *gin.Context)
+	Register(c *gin.Context)
+	Permissions(c *gin.Context)
 }
