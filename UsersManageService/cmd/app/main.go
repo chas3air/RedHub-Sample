@@ -17,12 +17,10 @@ func main() {
 
 	log.Info("starting application", slog.Any("config:", cfg))
 
-	application := app.New(log, cfg)
+	application := app.New(log, cfg.Grpc.Port)
 
 	go func() {
-		if err := application.StartServer(); err != nil {
-			log.Error("server error", slog.Any("error", err))
-		}
+		application.GRPCServer.MustRun()
 	}()
 
 	stop := make(chan os.Signal, 1)
@@ -30,9 +28,7 @@ func main() {
 
 	<-stop
 
-	log.Info("stopping application")
-	if err := application.Stop(); err != nil {
-		log.Error("error stopping application", slog.Any("error", err))
-	}
+	application.GRPCServer.Stop()
+
 	log.Info("application stopped")
 }

@@ -1,3 +1,6 @@
 env: "local"
-port: 13000
-expiration-time: 10s
+expiration_time: 10s
+
+grpc:
+  port: 50051
+  timeout: 10h

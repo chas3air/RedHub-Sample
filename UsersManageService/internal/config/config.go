@@ -10,8 +10,13 @@ import (
 
 type Config struct {
 	Env            string        `yaml:"env" env-default:"local"`
-	Port           int           `yaml:"port"`
-	ExpirationTime time.Duration `yaml:"expiration-time"`
+	Grpc           GrpcConfig    `yaml:"grpc"`
+	ExpirationTime time.Duration `yaml:"expiration_time"`
+}
+
+type GrpcConfig struct {
+	Port    int           `yaml:"port"`
+	Timeout time.Duration `yaml:"timeout"`
 }
 
 func MustLoad() *Config {
