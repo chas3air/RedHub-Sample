@@ -3,16 +3,15 @@ module usersManageService
 go 1.23.6
 
 require (
+	github.com/chas3air/protos v0.0.10
+	github.com/fatih/color v1.18.0
 	github.com/google/uuid v1.6.0
-	github.com/gorilla/mux v1.8.1
+	github.com/ilyakaznacheev/cleanenv v1.5.0
 	google.golang.org/grpc v1.70.0
 )
 
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
-	github.com/chas3air/protos v0.0.7 // indirect
-	github.com/fatih/color v1.18.0 // indirect
-	github.com/ilyakaznacheev/cleanenv v1.5.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

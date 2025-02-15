@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"usersManageService/internal/app"
 	"usersManageService/internal/config"
-	"usersManageService/lib/logger"
+	"usersManageService/internal/lib/logger"
 )
 
 func main() {

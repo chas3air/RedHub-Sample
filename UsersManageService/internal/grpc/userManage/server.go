@@ -2,7 +2,8 @@ package usermanage
 
 import (
 	"context"
-	"usersManageService/internal/domain/models"
+	"log"
+	"usersManageService/internal/domain/interfaces/storage"
 	"usersManageService/internal/domain/profiles"
 
 	umv1 "github.com/chas3air/protos/gen/go/usersManager"
@@ -13,36 +14,31 @@ import (
 	"github.com/google/uuid"
 )
 
-type UsersManager interface {
-	ListUsers(ctx context.Context) ([]models.User, error)
-	GetUserById(ctx context.Context, uid uuid.UUID) (models.User, error)
-	GetUserByEmail(ctx context.Context, email string) (models.User, error)
-	Insert(ctx context.Context, user models.User) error
-	Update(ctx context.Context, uid uuid.UUID, user models.User) error
-	Delete(ctx context.Context, uid uuid.UUID) (models.User, error)
-}
-
 type serverAPI struct {
 	umv1.UnimplementedUsersManagerServer
-	userManager UsersManager
+	userManager storage.Storage
 }
 
-func Register(grpc *grpc.Server, userManager UsersManager) {
+func Register(grpc *grpc.Server, userManager storage.Storage) {
 	umv1.RegisterUsersManagerServer(grpc, &serverAPI{userManager: userManager})
 }
 
-func (s *serverAPI) ListUsers(ctx context.Context, req *umv1.ListUsersRequest) (*umv1.ListUsersResponse, error) {
-	app_users, err := s.userManager.ListUsers(ctx)
+func (s *serverAPI) GetUsers(ctx context.Context, req *umv1.GetUsersRequest) (*umv1.GetUsersResponse, error) {
+	app_users, err := s.userManager.GetUsers(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to retrieve app users")
 	}
 
 	resp_users := make([]*umv1.User, 0, len(app_users))
 	for _, user := range app_users {
-		resp_users = append(resp_users, profiles.UsrToProroUsr(user))
+		profiles_user, err := profiles.UsrToProroUsr(user)
+		if err != nil {
+			log.Println("error user:", user)
+		}
+		resp_users = append(resp_users, profiles_user)
 	}
 
-	return &umv1.ListUsersResponse{
+	return &umv1.GetUsersResponse{
 		Users: resp_users,
 	}, nil
 }
@@ -56,35 +52,51 @@ func (s *serverAPI) GetUserById(ctx context.Context, req *umv1.GetUserByIdReques
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "user no found")
 	}
+	profiled_user, err := profiles.UsrToProroUsr(requested_user)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "internal")
+	}
 
 	return &umv1.GetUserByIdResponse{
-		User: profiles.UsrToProroUsr(requested_user),
+		User: profiled_user,
 	}, nil
 }
 
-func (s *serverAPI) GetUserByLogin(ctx context.Context, req *umv1.GetUserByEmailRequest) (*umv1.GetUserByEmailResponse, error) {
+func (s *serverAPI) GetUserByEmail(ctx context.Context, req *umv1.GetUserByEmailRequest) (*umv1.GetUserByEmailResponse, error) {
 	requested_user, err := s.userManager.GetUserByEmail(ctx, req.GetEmail())
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid argument")
 	}
 
+	profiled_user, err := profiles.UsrToProroUsr(requested_user)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "internal")
+	}
+
 	return &umv1.GetUserByEmailResponse{
-		User: profiles.UsrToProroUsr(requested_user),
+		User: profiled_user,
 	}, nil
 }
 
-func (s *serverAPI) InsertUser(ctx context.Context, req *umv1.InsertUserRequest) (*umv1.InsertUserResponse, error) {
-	parsedUser := profiles.ProtoUsrToUsr((req.GetUser()))
+func (s *serverAPI) Insert(ctx context.Context, req *umv1.InsertRequest) (*umv1.InsertResponse, error) {
+	parsedUser, err := profiles.ProtoUsrToUsr((req.GetUser()))
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid argument")
+	}
 
-	err := s.userManager.Insert(ctx, parsedUser)
+	err = s.userManager.Insert(ctx, parsedUser)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid argument")
 	}
 	return nil, nil
 }
 
-func (s *serverAPI) UpdateUser(ctx context.Context, req *umv1.UpdateUserRequest) (*umv1.UpdateUserResponse, error) {
-	parsedUser := profiles.ProtoUsrToUsr(req.GetUser())
+func (s *serverAPI) Update(ctx context.Context, req *umv1.UpdateRequest) (*umv1.UpdateResponse, error) {
+	parsedUser, err := profiles.ProtoUsrToUsr(req.GetUser())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid argument")
+	}
+
 	parsedUUID, err := uuid.Parse(req.GetId())
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid id")
@@ -109,7 +121,12 @@ func (s *serverAPI) Delete(ctx context.Context, req *umv1.DeleteRequest) (*umv1.
 		return nil, status.Error(codes.InvalidArgument, "invalid arguments")
 	}
 
+	profiled_user, err := profiles.UsrToProroUsr(user)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "internal")
+	}
+
 	return &umv1.DeleteResponse{
-		User: profiles.UsrToProroUsr(user),
+		User: profiled_user,
 	}, nil
 }

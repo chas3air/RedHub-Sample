@@ -4,42 +4,33 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"usersManageService/internal/domain/interfaces/storage"
 	"usersManageService/internal/domain/models"
 
 	"github.com/google/uuid"
 )
 
-type Storage interface {
-	GetUsers(context.Context) ([]models.User, error)
-	GetUserById(context.Context, uuid.UUID) (models.User, error)
-	GetUserByEmail(context.Context, string) (models.User, error)
-	Insert(context.Context, models.User) error
-	Update(context.Context, uuid.UUID, models.User) error
-	Delete(context.Context, uuid.UUID) (models.User, error)
-}
-
+// TODO: разделить интерфейсы Storage и UserManager
 type UserManager struct {
 	log     *slog.Logger
-	storage Storage
+	storage storage.Storage
 }
 
-func New(log *slog.Logger, storage Storage) *UserManager {
+func New(log *slog.Logger, storage storage.Storage) *UserManager {
 	return &UserManager{
 		log:     log,
 		storage: storage,
 	}
 }
 
-func (um *UserManager) ListUsers(ctx context.Context) ([]models.User, error) {
-	// const op = "services.userManager.ListUsers"
-	// users, err := um.storage.GetUsers(ctx)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("%s: %w", op, err)
-	// }
+func (um *UserManager) GetUsers(ctx context.Context) ([]models.User, error) {
+	const op = "services.userManager.ListUsers"
+	users, err := um.storage.GetUsers(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
 
-	// return users, nil
-
-	return nil, nil
+	return users, nil
 }
 
 func (um *UserManager) GetUserById(ctx context.Context, uid uuid.UUID) (models.User, error) {

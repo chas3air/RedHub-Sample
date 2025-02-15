@@ -1,10 +1,11 @@
 package logger
 
 import (
+	constants "usersManageService/internal/config"
+	"usersManageService/internal/lib/logger/handler/slogpretty"
+
 	"log/slog"
 	"os"
-	constants "usersManageService/internal/config"
-	"usersManageService/lib/logger/handler/slogpretty"
 )
 
 func SetupLogger(env string) *slog.Logger {

@@ -5,7 +5,3 @@ const (
 	EnvDev   = "dev"
 	EnvProd  = "prod"
 )
-
-var (
-	UsersAccessService_url = /*os.Getenv("UsersAccessServiceURL")*/ "url"
-)

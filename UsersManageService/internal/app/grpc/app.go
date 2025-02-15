@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"usersManageService/internal/domain/interfaces/storage"
 	usermanage "usersManageService/internal/grpc/userManage"
 
 	"google.golang.org/grpc"
@@ -15,7 +16,7 @@ type App struct {
 	port       int
 }
 
-func New(log *slog.Logger, userManService usermanage.UsersManager, port int) *App {
+func New(log *slog.Logger, userManService storage.Storage, port int) *App {
 	gRPCServer := grpc.NewServer()
 
 	usermanage.Register(gRPCServer, userManService)
